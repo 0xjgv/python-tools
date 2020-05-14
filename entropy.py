@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
 from argparse import Namespace, ArgumentParser
 from collections import Counter, defaultdict
+from functools import lru_cache
 from typing import List
-from re import sub
+from re import split
 import argparse
 import math
 import sys
 
 
+@lru_cache(maxsize=None)
+def calculate_entropy(s):
+    p, lns = Counter(s), float(len(s))
+    return -sum(count / lns * math.log(count / lns, 2) for count in p.values())
+
+
 def entropy_lines(lines: List[str]) -> float:
+    all_lines = [l.strip() for l in lines]
     results = []
-    for line in lines:
-        chrs = sub(r"[^\w]", "", line.lower().strip())
-        counts = Counter(chrs)
-        length = len(chrs)
-        prob = [float(c) / length for c in counts.values()]
-        entropy = -sum([p * math.log(p) / math.log(2.0) for p in prob])
-        results.append((entropy, line))
+    while all_lines:
+        line = all_lines.pop()
+        if line:
+            for w in split(r"[^\w]|_", line.lower()):
+                entropy = calculate_entropy(w)
+                if len(w) > 20 and entropy > 0:
+                    results.append((round(entropy, 3), line))
     return results
 
 
@@ -35,8 +43,9 @@ def run(args: Namespace) -> None:
     n = abs(int(args.number))
     results = entropy_lines(args.text)
     for score, line in sorted(results)[-n:]:
-        print(f"--- Line ---\n{line}")
+        print(f"--- Line ---\n{line[:50]}...")
         print(f"Entropy: {score}")
+        print(f"Length: {len(line)}")
 
 
 if __name__ == "__main__":
