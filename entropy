@@ -16,15 +16,13 @@ def calculate_entropy(s):
 
 
 def entropy_lines(lines: List[str]) -> float:
-    all_lines = [l.strip() for l in lines]
+    all_lines = list(filter(bool, [l.strip() for l in lines]))
     results = []
-    while all_lines:
-        line = all_lines.pop()
-        if line:
-            for w in split(r"[^\w]|_", line.lower()):
-                entropy = calculate_entropy(w)
-                if len(w) > 20 and entropy > 0:
-                    results.append((round(entropy, 3), line))
+    for l in all_lines:
+        for w in split(r"[^\w]|_", l.lower()):
+            entropy = calculate_entropy(w)
+            if entropy > 0:
+                results.append((round(entropy, 3), l))
     return results
 
 
@@ -34,7 +32,7 @@ def parse_options(args: List[str]) -> Namespace:
     )
     parser.add_argument("text", nargs="+", help="Text you want to calculate entropy")
     parser.add_argument(
-        "-n", "--number", default=10, help="Display n largest entropy values"
+        "-n", "--number", default=5, help="Display n largest entropy values. Default: 5"
     )
     return parser.parse_args(args)
 
