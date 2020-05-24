@@ -17,7 +17,12 @@ export PATH="/path/to/this/repo:$PATH"
 
 `entropy someveryveryrandomlongtext`
 
-### SMTP verifier
+### SMTP verify emails
 `cat emails.txt | smtp_verifier verify`
 
 `smtp_verifier verify EMAIL`
+
+### SMTP get MX records
+`cat domains.txt | smtp_verifier mx`
+
+`smtp_verifier mx DOMAIN`
