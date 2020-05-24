@@ -19,7 +19,7 @@ def entropy_lines(lines: List[str]) -> float:
     all_lines = list(filter(bool, [l.strip() for l in lines]))
     results = []
     for l in all_lines:
-        for w in split(r"[^\w]|_", l.lower()):
+        for w in split(r" |_", l.lower()):
             entropy = calculate_entropy(w)
             if entropy > 0:
                 results.append((round(entropy, 3), l))

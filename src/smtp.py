@@ -8,9 +8,9 @@ from smtplib import SMTP
 from re import search
 
 
-EMAIL_VERIFICATIONS = './cache/verifications.ldjson'
+EMAIL_VERIFICATIONS = "./cache/verifications.ldjson"
 REQUEST_TIMEOUT_SMTP = 25
-EMAILS_LIST = 'emails.csv'
+EMAILS_LIST = "emails.csv"
 DATE_FORMAT = "%Y-%m-%d"
 
 
@@ -40,9 +40,11 @@ DATE_FORMAT = "%Y-%m-%d"
 
 def smtp_email_check(mx: str, username: str, domain: str) -> (int, bytes):
     email = f"{username}@{domain}"
-    proxy_address = ('', 9150)
+    proxy_address = ("", 9150)
     try:
-        with SMTP(mx, timeout=REQUEST_TIMEOUT_SMTP, source_address=proxy_address) as smtp:
+        with SMTP(
+            mx, timeout=REQUEST_TIMEOUT_SMTP, source_address=proxy_address
+        ) as smtp:
             smtp.ehlo(f"mail.{domain}")
             smtp.docmd(f"mail from: <{email}>")
             return smtp.docmd(f"rcpt to: <{email}>")
@@ -54,10 +56,10 @@ def smtp_email_check(mx: str, username: str, domain: str) -> (int, bytes):
 hosts_by_domain = {}
 
 
+MAX_RETRIES = 10
 # Caching mechanism
 # @verify_email_middleware
 def verify_email(email: str, get_mx_servers: Callable) -> dict:
-    print(f"Verifying email '{email}'...")
     if not "@" in email:
         return {"email": email, "error": "Not an email."}
     username, domain = email.split("@")
@@ -65,38 +67,22 @@ def verify_email(email: str, get_mx_servers: Callable) -> dict:
     if domain not in hosts_by_domain:
         hosts_by_domain[domain] = cycle(get_mx_servers(domain))
 
-    try:
-        hosts = hosts_by_domain.get(domain)
-        host = next(hosts)
-    except:
-        return {"email": email, "error": f"Host not found for {domain} domain."}
+    hosts = hosts_by_domain.get(domain)
+    for i, host in enumerate(hosts):
+        code, msg = smtp_email_check(host, username, domain)
+        is_valid = code == 250
+        error = msg.decode() if not is_valid else None
+        if error and "48" in error:
+            if i > MAX_RETRIES:
+                break
+            continue
+        return {"email": email, "is_valid": is_valid, "error": error, "host": host}
 
-    code, msg = smtp_email_check(host, username, domain)
-    is_valid = code == 250
-    error = msg.decode() if not is_valid else None
-    return {"email": email, "is_valid": is_valid, "error": error, "host": host}
-
-
-def read_emails():
-    emails = []
-    with open(EMAILS_LIST, "r") as file:
-        for line in file.readlines():
-            email = search(r"[a-z\.0-9-]+@[a-z\.0-9-]+", line.lower().strip())
-            if email:
-                emails.append(email.group(0))
-            else:
-                print(f"Email not found: {line}")
-    return emails
+    return {"email": email, "error": f"Host not found for {domain} domain."}
 
 
 if __name__ == "__main__":
     from dig import get_mx_servers
 
-    res = verify_email("juan.gaitan@gmail.com", get_mx_servers)
+    res = verify_email("example@gmail.com", get_mx_servers)
     print(res)
-    # emails = read_emails()
-    # verifications = {}
-    # for email in emails:
-    #     print(f"Verifying {email}...")
-    #     verifications[email] = verify_email(email, get_mx_servers) or {}
-    # print("Done.")
