@@ -72,9 +72,12 @@ def run(args: Namespace) -> None:
 
 
 def parse_options(args: List[str]) -> Namespace:
-    parser = ArgumentParser(
-        description="Check for Slowloris DOS (Denial of Service). Please use this on IP addresses you own or you permission to execute this check/attack."
-    )
+    description = """
+    Check for Slowloris DOS (denial-of-service).
+    Many jurisdictions have laws under which denial-of-service attacks are illegal.
+    Use this tool responsibly (on IP addresses you own or have been given permission).
+    """
+    parser = ArgumentParser(description=description)
     parser.add_argument("ip", help="IP to attack")
     parser.add_argument(
         "-n",
