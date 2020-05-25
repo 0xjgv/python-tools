@@ -12,11 +12,6 @@ export PATH="/path/to/this/repo:$PATH"
 
 # Commands
 
-### Entropy
-`find ../ -type f -name *.py -not -empty | xargs -n1 cat | entropy`
-
-`entropy someveryveryrandomlongtext`
-
 ### SMTP verify emails
 `cat emails.txt | smtp_verifier verify`
 
@@ -26,3 +21,18 @@ export PATH="/path/to/this/repo:$PATH"
 `cat domains.txt | smtp_verifier mx`
 
 `smtp_verifier mx DOMAIN`
+
+### Entropy
+#### Defaults: --number 5
+`find ../ -type f -name *.py -not -empty | xargs -n1 cat | entropy`
+
+
+`find ../ -type f -name * -not -empty | xargs -n1 cat | entropy -n 10`
+
+`entropy someveryveryrandomlongtext`
+
+### Slowloris
+#### Defaults: --number 100, --minutes 1, --threads 1
+`slowloris IP`
+
+`slowloris IP -n CONNECTIONS -m MINUTES -t THREADS`
