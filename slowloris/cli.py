@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import argparse
 import logging
 import random
@@ -10,9 +9,7 @@ parser = argparse.ArgumentParser(
     description="Slowloris, low bandwidth stress test tool for websites"
 )
 parser.add_argument("host", nargs="?", help="Host to perform stress test on")
-parser.add_argument(
-    "-p", "--port", default=80, help="Port of webserver, usually 80", type=int
-)
+parser.add_argument("-p", "--port", default=80, help="Port of webserver, usually 80", type=int)
 parser.add_argument(
     "-s",
     "--sockets",
@@ -155,14 +152,10 @@ def main():
 
     while True:
         try:
-            logging.info(
-                "Sending keep-alive headers... Socket count: %s", len(list_of_sockets)
-            )
+            logging.info("Sending keep-alive headers... Socket count: %s", len(list_of_sockets))
             for s in list(list_of_sockets):
                 try:
-                    s.send(
-                        "X-a: {}\r\n".format(random.randint(1, 5000)).encode("utf-8")
-                    )
+                    s.send("X-a: {}\r\n".format(random.randint(1, 5000)).encode("utf-8"))
                 except socket.error:
                     list_of_sockets.remove(s)
 

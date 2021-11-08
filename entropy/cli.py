@@ -1,10 +1,8 @@
-#!/usr/bin/env python3
 from argparse import Namespace, ArgumentParser
-from collections import Counter, defaultdict
+from collections import Counter
 from functools import lru_cache
-from typing import List
+from typing import List, Tuple
 from re import split
-import argparse
 import math
 import sys
 
@@ -15,20 +13,21 @@ def calculate_entropy(s):
     return -sum(count / lns * math.log(count / lns, 2) for count in p.values())
 
 
-def entropy_lines(lines: List[str]) -> float:
-    all_lines = list(filter(bool, [l.strip() for l in lines]))
+def entropy_lines(lines: List[str]) -> List[Tuple[float, str]]:
+    all_lines = list(filter(bool, map(str.strip, lines)))
     results = []
-    for l in all_lines:
-        for w in split(r" |_", l.lower()):
+    for line in all_lines:
+        for w in split(r" |_", line.lower()):
             entropy = calculate_entropy(w)
             if entropy > 0:
-                results.append((round(entropy, 3), l))
+                results.append((round(entropy, 3), line))
     return results
 
 
 def parse_options(args: List[str]) -> Namespace:
     parser = ArgumentParser(
-        prog="entropy", description=("Measure the entropy of a string"),
+        prog="entropy",
+        description=("Measure the entropy of a string"),
     )
     parser.add_argument("text", nargs="+", help="Text you want to calculate entropy")
     parser.add_argument(
@@ -41,14 +40,19 @@ def run(args: Namespace) -> None:
     n = abs(int(args.number))
     results = entropy_lines(args.text)
     for score, line in sorted(results)[-n:]:
+        print(score, line)
         print(f"--- Line ---\n{line[:50]}...")
         print(f"Entropy: {score}")
         print(f"Length: {len(line)}")
 
 
-if __name__ == "__main__":
+def main():
     if sys.stdin.isatty():
         run(parse_options(sys.argv[1:]))
     else:
-        lines = [l.strip() for l in sys.stdin]
+        lines = list(map(str.strip, sys.stdin))
         run(parse_options(sys.argv[1:] + lines))
+
+
+if __name__ == "__main__":
+    main()

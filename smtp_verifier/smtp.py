@@ -1,11 +1,6 @@
-from datetime import datetime, timedelta
-from json import dumps, loads
-from typing import Callable
+from typing import Callable, Tuple
 from itertools import cycle
-from random import randint
-from os.path import exists
 from smtplib import SMTP
-from re import search
 
 
 EMAIL_VERIFICATIONS = "./cache/verifications.ldjson"
@@ -38,13 +33,11 @@ DATE_FORMAT = "%Y-%m-%d"
 #     return wrapper
 
 
-def smtp_email_check(mx: str, username: str, domain: str) -> (int, bytes):
+def smtp_email_check(mx: str, username: str, domain: str) -> Tuple[int, bytes]:
     email = f"{username}@{domain}"
     proxy_address = ("", 9150)
     try:
-        with SMTP(
-            mx, timeout=REQUEST_TIMEOUT_SMTP, source_address=proxy_address
-        ) as smtp:
+        with SMTP(mx, timeout=REQUEST_TIMEOUT_SMTP, source_address=proxy_address) as smtp:
             smtp.ehlo(f"mail.{domain}")
             smtp.docmd(f"mail from: <{email}>")
             return smtp.docmd(f"rcpt to: <{email}>")
@@ -57,17 +50,19 @@ hosts_by_domain = {}
 
 
 MAX_RETRIES = 10
+
+
 # Caching mechanism
 # @verify_email_middleware
 def verify_email(email: str, get_mx_servers: Callable) -> dict:
-    if not "@" in email:
+    if "@" not in email:
         return {"email": email, "error": "Not an email."}
     username, domain = email.split("@")
 
     if domain not in hosts_by_domain:
         hosts_by_domain[domain] = cycle(get_mx_servers(domain))
 
-    hosts = hosts_by_domain.get(domain)
+    hosts = hosts_by_domain.get(domain, [])
     for i, host in enumerate(hosts):
         code, msg = smtp_email_check(host, username, domain)
         is_valid = code == 250

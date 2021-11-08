@@ -1,4 +1,4 @@
-from asyncio import gather, run, create_subprocess_shell, subprocess
+from asyncio import gather, create_subprocess_shell, subprocess
 from os.path import exists, dirname
 from urllib.parse import urlparse
 from json import load, dump
@@ -49,7 +49,9 @@ async def get_mx_servers_async(url: str) -> dict:
     print(f"Getting MX servers for {domain}...")
 
     proc = await create_subprocess_shell(
-        f"dig +short mx {domain}", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        f"dig +short mx {domain}",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     stdout, stderr = await proc.communicate()
 

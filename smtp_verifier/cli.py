@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 from argparse import ArgumentParser, Namespace
-from src.dig import get_mx_servers
-from src.smtp import verify_email
+from smtp_verifier.dig import get_mx_servers
+from smtp_verifier.smtp import verify_email
 from typing import List
 import sys
 
@@ -10,9 +9,7 @@ def parse_options(args: List[str]) -> Namespace:
     parser = ArgumentParser(description="SMTP tool to verify emails")
     subparser = parser.add_subparsers(help="commands", dest="command", required=True)
 
-    verify_parser = subparser.add_parser(
-        "verify", help="Verify an email (not always possible)"
-    )
+    verify_parser = subparser.add_parser("verify", help="Verify an email (not always possible)")
     verify_parser.add_argument("email", type=str, help="Email to check", nargs="+")
 
     mx_parser = subparser.add_parser("mx", help="Get MX records for a domain or email")
@@ -39,9 +36,13 @@ def run(args: Namespace) -> None:
             print(f"MX hosts for {d}:", ", ".join(mxs))
 
 
-if __name__ == "__main__":
+def main():
     if sys.stdin.isatty():
         run(parse_options(sys.argv[1:]))
     else:
-        lines = [l.strip() for l in sys.stdin]
+        lines = list(map(str.strip, sys.stdin))
         run(parse_options(sys.argv[1:] + lines))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "tools"
+version = "0.1.0"
+description = ""
+authors = ["Juan Gaitan <juans.gaitan@gmail.com>"]
+packages = [
+    { include = "smtp_verifier" },
+    { include = "slowloris" },
+    { include = "entropy" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.dev-dependencies]
+black = "^21.10b0"
+flake8 = "^4.0.1"
+
+[tool.poetry.scripts]
+smtp_verifier = "smtp_verifier.cli:main"
+slowloris = "slowloris.cli:main"
+entropy = "entropy.cli:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
