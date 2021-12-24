@@ -18,6 +18,7 @@ def mx_domains_middleware(fn):
         Path(dirname(MX_DOMAINS_PATH)).mkdir(parents=True, exist_ok=True)
 
     def wrapper(domain):
+        # here: invalidate cache
         if domain not in mx_by_domain:
             mx_by_domain[domain] = fn(domain)
             try:
