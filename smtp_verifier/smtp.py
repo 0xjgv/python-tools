@@ -1,29 +1,8 @@
-from pathlib import Path
-from datetime import datetime
 from time import sleep
 from typing import Callable, Tuple
 from itertools import cycle
 from smtplib import SMTP
-
-
-LOG_ENTRY_PATH = Path("./cache/verifications.log")
-REQUEST_TIMEOUT_SMTP = 25
-EMAILS_LIST = "emails.csv"
-DATE_FORMAT = "%Y-%m-%d"
-
-
-def _log_entry(fn):
-    LOG_ENTRY_PATH.touch(exist_ok=True)
-
-    def wrapper(*args, **kwargs):
-        result = fn(*args, **kwargs)
-        with LOG_ENTRY_PATH.open(mode="a") as log:
-            timestamp = datetime.now().isoformat()
-            info = ", ".join([f"{k}={v}" for k, v in result.items()])
-            log.writelines([f"[{timestamp}] {info}", "\n"])
-        return result
-
-    return wrapper
+from smtp_verifier.config import log_entry, REQUEST_TIMEOUT_SMTP
 
 
 def smtp_email_check(mx: str, username: str, domain: str) -> Tuple[int, bytes]:
@@ -44,7 +23,7 @@ hosts_by_domain = {}
 MAX_RETRIES = 10
 
 
-@_log_entry
+@log_entry
 def verify_email(email: str, get_mx_servers: Callable) -> dict:
     if "@" not in email:
         return {"email": email, "error": "Not an email."}
