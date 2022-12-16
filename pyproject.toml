@@ -12,8 +12,6 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.11"
 
-[tool.poetry.dev-dependencies]
-
 [tool.poetry.scripts]
 smtp_verifier = "smtp_verifier.cli:main"
 slowloris = "slowloris.cli:main"
