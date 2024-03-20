@@ -18,7 +18,7 @@ slowloris = "slowloris.cli:main"
 entropy = "entropy.cli:main"
 
 [tool.poetry.group.dev.dependencies]
-black = "^22.12.0"
+black = "^24.3.0"
 flake8 = "^6.0.0"
 
 [build-system]
